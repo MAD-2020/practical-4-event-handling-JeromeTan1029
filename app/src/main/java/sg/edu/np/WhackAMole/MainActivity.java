@@ -2,42 +2,105 @@ package sg.edu.np.WhackAMole;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    /* Hint
-        - The function setNewMole() uses the Random class to generate a random value ranged from 0 to 2.
-        - The function doCheck() takes in button selected and computes a hit or miss and adjust the score accordingly.
-        - The function doCheck() also decides if the user qualifies for the advance level and triggers for a dialog box to ask for user to decide.
-        - The function nextLevelQuery() builds the dialog box and shows. It also triggers the nextLevel() if user selects Yes or return to normal state if user select No.
-        - The function nextLevel() launches the new advanced page.
-        - Feel free to modify the function to suit your program.
-    */
+    private Button ButtonLeft;
+    private Button ButtonMiddle;
+    private Button ButtonRight;
+    private TextView ScoreText;
+    private List<Button> buttonList = new ArrayList<Button>();
+    private int score;
+
+    private static final String TAG = "Whack-A-Mole";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.setTitle("Whack-A-Mole!"); // Set Title Of Activity
+
+        ButtonLeft = (Button) findViewById(R.id.ButtonLeft);
+        ButtonMiddle = (Button) findViewById(R.id.ButtonMiddle);
+        ButtonRight = (Button) findViewById(R.id.ButtonRight);
+        ScoreText = findViewById(R.id.Score);
+        score = 0;
+
+        buttonList.add(ButtonLeft);
+        buttonList.add(ButtonMiddle);
+        buttonList.add(ButtonRight);
+
+        ButtonLeft.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                Log.v(TAG, "Left Button Clicked!");
+                if (hitCorrectButton(ButtonLeft)){
+                    Log.v(TAG, "Hit, score added!");
+                    score += 1;
+                }
+                else{
+                    Log.v(TAG, "Missed, score deducted!");
+                    score -= 1;
+                }
+                ScoreText.setText(score + "");
+                doCheck(ButtonLeft);
+                setNewMole(buttonList);
+            }
+        });
+
+        ButtonMiddle.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                Log.v(TAG, "Middle Button Clicked!");
+                if (hitCorrectButton(ButtonMiddle)){
+                    Log.v(TAG, "Hit, score added!");
+                    score += 1;
+                }
+                else{
+                    Log.v(TAG, "Missed, score deducted!");
+                    score -= 1;
+                }
+                ScoreText.setText(score + "");
+                doCheck(ButtonMiddle);
+                setNewMole(buttonList);
+            }
+        });
+
+        ButtonRight.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                Log.v(TAG, "Right Button Clicked!");
+                if (hitCorrectButton(ButtonRight)){
+                    Log.v(TAG, "Hit, score added!");
+                    score += 1;
+                }
+                else{
+                    Log.v(TAG, "Missed, score deducted!");
+                    score -= 1;
+                }
+                ScoreText.setText(score + "");
+                doCheck(ButtonRight);
+                setNewMole(buttonList);
+            }
+        });
 
         Log.v(TAG, "Finished Pre-Initialisation!");
-
-
     }
+
     @Override
     protected void onStart(){
         super.onStart();
-        setNewMole();
-        Log.v(TAG, "Starting GUI!");
+        setNewMole(buttonList);
     }
+
     @Override
     protected void onPause(){
         super.onPause();
@@ -51,27 +114,60 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
-    private void doCheck(Button checkButton) {
-        /* Checks for hit or miss and if user qualify for advanced page.
-            Triggers nextLevelQuery().
-         */
+    private void doCheck(Button checkButton){
+        if (checkButton.getText().equals("*") && score % 10 == 0){
+            nextLevelQuery();
+        }
     }
 
     private void nextLevelQuery(){
-        /*
-        Builds dialog box here.
-        Log.v(TAG, "User accepts!");
-        Log.v(TAG, "User decline!");
+        final AlertDialog.Builder advancedVersionBuilder = new AlertDialog.Builder(this);
+        advancedVersionBuilder.setTitle("Advanced Version");
+        advancedVersionBuilder.setMessage("Would you like to enter the advanced version?");
+        advancedVersionBuilder.setCancelable(false);
+        advancedVersionBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+                Log.v(TAG, "User accepts!");
+                nextLevel();
+            }
+        });
+        advancedVersionBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.v(TAG, "User decline!");
+            }
+        });
+        final AlertDialog advancedVersionAlert = advancedVersionBuilder.create();
+        advancedVersionAlert.show();
         Log.v(TAG, "Advance option given to user!");
-        belongs here*/
     }
 
     private void nextLevel(){
-        /* Launch advanced page */
+        Intent toAdvanced = new Intent(MainActivity.this, AdvancedWhackAMoleActivity.class);
+        toAdvanced.putExtra("Score", score);
+        startActivity(toAdvanced);
+        finish();
     }
 
-    private void setNewMole() {
-        Random ran = new Random();
-        int randomLocation = ran.nextInt(3);
+    public static boolean hitCorrectButton(Button button){
+        if (button.getText().equals("*")){
+            return true;
+        }
+
+        else if (button.getText().equals("O")){
+            return false;
+        }
+
+        return false;
+    }
+
+    public static void setNewMole(List<Button> buttonList){
+        Random r = new Random();
+        int molePlace = r.nextInt(buttonList.size());
+        for (Button button : buttonList){
+            button.setText("O");
+        }
+        buttonList.get(molePlace).setText("*");
     }
 }
